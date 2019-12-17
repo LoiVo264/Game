@@ -8,14 +8,14 @@ class Game:
         self.screen = pygame.display.set_mode((800, 600))
         pygame.display.set_caption('Break brick')
         self.bg_color = (0,0,0)
-        # ship
+        # deck
         self.deck = Deck(self)
 
     def run_game(self):
         """ Main loop for the game."""
         while True:
             self.check_event()
-            # Change the ship's position by calling its 'update' method
+            # Change the deck's position by calling its 'update' method
             self.deck.update()
             self.update_game()
 
@@ -26,18 +26,18 @@ class Game:
                 sys.exit()
             # Check key pressed
             elif event.type == pygame.KEYDOWN:
-                # Move the ship to the right by activating 'direction' flag
+                # Move the deck to the right by activating 'direction' flag
                 if event.key == pygame.K_RIGHT:
                     self.deck.moving_right = True
-                # Move the ship to the left by activating 'direction' flag
+                # Move the deck to the left by activating 'direction' flag
                 elif event.key == pygame.K_LEFT:
                     self.deck.moving_left = True
             # Check key released
             elif event.type == pygame.KEYUP:
-                # Stop the ship by activating 'direction' flag
+                # Stop the deck by activating 'direction' flag
                 if event.key == pygame.K_RIGHT:
                     self.deck.moving_right = False
-                # Stop the ship by activating 'direction' flag
+                # Stop the deck by activating 'direction' flag
                 elif event.key == pygame.K_LEFT:
                     self.deck.moving_left = False
                    
@@ -45,7 +45,7 @@ class Game:
     def update_game(self):
         # Redraw the screen
         self.screen.fill(self.bg_color)
-        # Draw the ship
+        # Draw the deck
         self.deck.blitme()
         # Make the most recently drawn screen visible.
         pygame.display.flip()
