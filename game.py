@@ -1,49 +1,81 @@
 import sys
 import pygame
 from deck import Deck
-import time
-import random
+
+SCREEN_SIZE   = 800,600
+BRICK_WIDTH= 60
+BRICK_HEIGHT=30
+       
+DECK_WIDTH  = 70
+DECK_HEIGHT = 15
+
+BALL_DIAMETER = 10
+BALL_RADIUS   = BALL_DIAMETER / 2
+
+MAX_BALL_X   = SCREEN_SIZE[0] - BALL_DIAMETER
+MAX_BALL_Y   = SCREEN_SIZE[1] - BALL_DIAMETER
+
+STATE_BALL_IN_PADDLE = 0
+STATE_PLAYING = 1
 class Game:
     """ Overall class to manage game assets and behavior."""
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((800, 600))
+        self.screen = pygame.display.set_mode(SCREEN_SIZE)
         pygame.display.set_caption('Break brick')
         self.bg_color = (0,0,0)
-                
         # deck
         self.deck = Deck(self)
-        # brick
         self.create_brick()
         
+        self.lives = 3
+        self.level = 1
+        self.score = 0
+        self.init_game()
         
+        
+    def init_game(self):
+        self.state= STATE_BALL_IN_PADDLE
+        self.ball= pygame.Rect(300,SCREEN_SIZE[1]-DECK_HEIGHT-BALL_DIAMETER,BALL_DIAMETER,BALL_DIAMETER)
+        
+        if self.level == 1:
+            self.ball_vel = [5,-5]
+        elif self.level == 2:
+            self.ball_vel = [6,-6]
+        elif self.level == 3:
+            self.ball_vel = [7,-7]
+        elif self.level == 4:
+            self.ball_vel = [8,-8]
+        else:
+            self.ball_vel = [9,-9]
     def create_brick(self):
-        
-        BRICK_WIDTH= 60
-        BRICK_HEIGHT=30
+ 
         y_ofs = 70
         self.bricks = []
-        for i in range(6):
+        for i in range(5):
             x_ofs = 70
             for j in range(10):      
                 self.bricks.append(pygame.Rect(x_ofs,y_ofs,BRICK_WIDTH,BRICK_HEIGHT)) 
-                x_ofs += BRICK_WIDTH + 3
-            y_ofs += BRICK_HEIGHT + 3  
+                x_ofs += BRICK_WIDTH +1
+            y_ofs += BRICK_HEIGHT +1
                
-            
-    def draw_bricks(self):
-        img= pygame.image.load("images/yellow.bmp")
-        for brick in self.bricks:
-            self.screen.blit(img,brick)           
-  
+    def draw_bricks(self):        
+        img= pygame.image.load("images/yellow.bmp") 
+        #ListImg=[pygame.image.load("images/yellow.bmp"), pygame.image.load("images/red.bmp"), 
+           # pygame.image.load("images/darkred.bmp"), pygame.image.load("images/green.bmp"),
+            #pygame.image.load("images/darkgreen.bmp"), pygame.image.load("images/purple.bmp")]
+        for brick in self.bricks:         
+           # img=random.choice(ListImg)
+            self.screen.blit(img,brick)
+    def draw_ball(self):       
+        white=(255,255,255)
+        pygame.draw.circle(self.screen, white, (int(self.ball.left + BALL_RADIUS),int(self.ball.top + BALL_RADIUS)),int(BALL_RADIUS))
     def run_game(self):
         """ Main loop for the game."""
         while True:
             self.check_event()
             # Change the deck's position by calling its 'update' method
-            
             self.deck.update()
-            
             self.update_game()
 
     def check_event(self):
@@ -68,20 +100,43 @@ class Game:
                 elif event.key == pygame.K_LEFT:
                     self.deck.moving_left = False
                    
+            if self.state == STATE_BALL_IN_PADDLE:
+                self.ball.left = self.deck.rect.left + self.deck.rect.width / 2
+                self.ball.top  = self.deck.rect.top - self.deck.rect.height
+                
+            if event.type == pygame.K_SPACE and self.state == STATE_BALL_IN_PADDLE: 
+                self.ball_vel = self.ball_vel
+                self.state = STATE_PLAYING
+            if self.state == STATE_PLAYING:
+                self.move_ball()        
 
+    def move_ball(self):
+        self.ball.left += self.ball_vel[0]
+        self.ball.top  += self.ball_vel[1]
+
+        if self.ball.left <= 0:
+            self.ball.left = 0
+            self.ball_vel[0] = -self.ball_vel[0]
+        elif self.ball.left >= MAX_BALL_X:
+            self.ball.left = MAX_BALL_X
+            self.ball_vel[0] = -self.ball_vel[0]
+        
+        if self.ball.top < 0:
+            self.ball.top = 0
+            self.ball_vel[1] = -self.ball_vel[1]
+        elif self.ball.top >= MAX_BALL_Y:            
+            self.ball.top = MAX_BALL_Y
+            self.ball_vel[1] = -self.ball_vel[1]
     def update_game(self):
         # Redraw the screen
         self.screen.fill(self.bg_color)
-        self.draw_bricks()
         # Draw the deck
         self.deck.blitme()
-        
+        self.draw_bricks()   
+        self.draw_ball()
         # Make the most recently drawn screen visible.
         pygame.display.flip()
-
-
-
-        
+    
 if __name__ == '__main__':
     # Make a game instance, and run the game.
     game = Game()
