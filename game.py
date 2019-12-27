@@ -6,7 +6,7 @@ SCREEN_SIZE   = 800,600
 BRICK_WIDTH= 60
 BRICK_HEIGHT=30
        
-DECK_WIDTH  = 70
+DECK_WIDTH  = 100
 DECK_HEIGHT = 15
 
 BALL_DIAMETER = 10
@@ -15,7 +15,9 @@ BALL_RADIUS   = BALL_DIAMETER / 2
 MAX_BALL_X   = SCREEN_SIZE[0] - BALL_DIAMETER
 MAX_BALL_Y   = SCREEN_SIZE[1] - BALL_DIAMETER
 
-STATE_BALL_IN_PADDLE = 0
+white=(255,255,255)
+
+STATE_BALL_IN_DECK = 0
 STATE_PLAYING = 1
 class Game:
     """ Overall class to manage game assets and behavior."""
@@ -24,6 +26,11 @@ class Game:
         self.screen = pygame.display.set_mode(SCREEN_SIZE)
         pygame.display.set_caption('Break brick')
         self.bg_color = (0,0,0)
+        
+        if pygame.font:
+            self.font = pygame.font.Font(None,30)
+        else:
+            self.font = None
         # deck
         self.deck = Deck(self)
         self.create_brick()
@@ -35,11 +42,11 @@ class Game:
         
         
     def init_game(self):
-        self.state= STATE_BALL_IN_PADDLE
-        self.ball= pygame.Rect(300,SCREEN_SIZE[1]-DECK_HEIGHT-BALL_DIAMETER,BALL_DIAMETER,BALL_DIAMETER)
+        self.state= STATE_BALL_IN_DECK
+        self.ball= pygame.Rect(0,SCREEN_SIZE[1]-DECK_HEIGHT-BALL_DIAMETER,BALL_DIAMETER,BALL_DIAMETER)
         
         if self.level == 1:
-            self.ball_vel = [5,-5]
+            self.ball_vel = [1,-1]
         elif self.level == 2:
             self.ball_vel = [6,-6]
         elif self.level == 3:
@@ -67,9 +74,9 @@ class Game:
         for brick in self.bricks:         
            # img=random.choice(ListImg)
             self.screen.blit(img,brick)
-    def draw_ball(self):       
-        white=(255,255,255)
+    def draw_ball(self):             
         pygame.draw.circle(self.screen, white, (int(self.ball.left + BALL_RADIUS),int(self.ball.top + BALL_RADIUS)),int(BALL_RADIUS))
+        
     def run_game(self):
         """ Main loop for the game."""
         while True:
@@ -99,16 +106,23 @@ class Game:
                 # Stop the deck by activating 'direction' flag
                 elif event.key == pygame.K_LEFT:
                     self.deck.moving_left = False
-                   
-            if self.state == STATE_BALL_IN_PADDLE:
-                self.ball.left = self.deck.rect.left + self.deck.rect.width / 2
-                self.ball.top  = self.deck.rect.top - self.deck.rect.height
+                    
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE] and self.state == STATE_BALL_IN_DECK:
+            self.ball_vel = self.ball_vel
+            self.state = STATE_PLAYING       
+            self.show_message("PRESS SPACE TO LAUNCH THE BALL")    
+            
+        if self.state == STATE_PLAYING:
+            self.move_ball()       
+            self.handle_collisions()
+        elif self.state == STATE_BALL_IN_DECK:
+            self.ball.left = self.deck.rect.left + self.deck.rect.width / 2
+            #self.ball.top  = self.deck.rect.top - self.deck.rect.height
+            
                 
-            if event.type == pygame.K_SPACE and self.state == STATE_BALL_IN_PADDLE: 
-                self.ball_vel = self.ball_vel
-                self.state = STATE_PLAYING
-            if self.state == STATE_PLAYING:
-                self.move_ball()        
+            
+                        
 
     def move_ball(self):
         self.ball.left += self.ball_vel[0]
@@ -127,6 +141,18 @@ class Game:
         elif self.ball.top >= MAX_BALL_Y:            
             self.ball.top = MAX_BALL_Y
             self.ball_vel[1] = -self.ball_vel[1]
+    def handle_collisions(self):
+        for brick in self.bricks:
+            if self.ball.colliderect(brick):
+                self.bricks.remove(brick)
+                break
+    def show_message(self,message):
+        if self.font:
+            size = self.font.size(message)
+            font_surface = self.font.render(message,False, white)
+            x = (SCREEN_SIZE[0] -size[0]) / 2
+            y = (SCREEN_SIZE[1] -size[1]) / 2
+            self.screen.blit(font_surface, (x,y))
     def update_game(self):
         # Redraw the screen
         self.screen.fill(self.bg_color)
