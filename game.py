@@ -19,6 +19,10 @@ white=(255,255,255)
 
 STATE_BALL_IN_DECK = 0
 STATE_PLAYING = 1
+STATE_WON = 2
+STATE_GAME_OVER = 3
+STATE_NEXT_LEVEL = 4
+STATE_PAUSE = 5
 class Game:
     """ Overall class to manage game assets and behavior."""
     def __init__(self):
@@ -33,7 +37,7 @@ class Game:
             self.font = None
         # deck
         self.deck = Deck(self)
-        self.create_brick()
+        
         
         self.lives = 3
         self.level = 1
@@ -49,12 +53,10 @@ class Game:
             self.ball_vel = [1,-1]
         elif self.level == 2:
             self.ball_vel = [6,-6]
-        elif self.level == 3:
-            self.ball_vel = [7,-7]
-        elif self.level == 4:
-            self.ball_vel = [8,-8]
         else:
-            self.ball_vel = [9,-9]
+            self.ball_vel = [7,-7]
+        
+        self.create_brick()
     def create_brick(self):
  
         y_ofs = 70
@@ -83,6 +85,25 @@ class Game:
             self.check_event()
             # Change the deck's position by calling its 'update' method
             self.deck.update()
+            
+            
+            if self.state == STATE_PLAYING:
+                self.move_ball()       
+                self.handle_collisions()
+            
+            elif self.state == STATE_BALL_IN_DECK:
+                self.ball.left = self.deck.rect.left + self.deck.rect.width / 2
+                self.ball.top  = self.deck.rect.top - self.deck.rect.height
+                self.show_message("PRESS SPACE TO LAUNCH THE BALL") 
+            elif self.state == STATE_GAME_OVER:
+                self.show_message("GAME OVER. PRESS ENTER TO PLAY AGAIN")
+            elif self.state == STATE_WON:
+                self.show_message("YOU WON! PRESS ENTER TO PLAY AGAIN")
+            elif self.state == STATE_NEXT_LEVEL:
+                self.show_message("YOU WON THIS LEVEL! PRESS TO CONTINUE")   
+                
+                
+            
             self.update_game()
 
     def check_event(self):
@@ -98,6 +119,17 @@ class Game:
                 # Move the deck to the left by activating 'direction' flag
                 elif event.key == pygame.K_LEFT:
                     self.deck.moving_left = True
+                elif event.key==pygame.K_SPACE and self.state == STATE_BALL_IN_DECK:
+                    self.ball_vel = self.ball_vel
+                    self.state = STATE_PLAYING 
+                    
+                elif event.key==pygame.K_RETURN and (self.state == STATE_GAME_OVER or self.state == STATE_WON):
+                    self.init_game()
+                    self.lives = 3
+                    self.score = 0
+                    self.level = 1
+            
+                    self.ball_vel = [1,-1]   
             # Check key released
             elif event.type == pygame.KEYUP:
                 # Stop the deck by activating 'direction' flag
@@ -106,20 +138,17 @@ class Game:
                 # Stop the deck by activating 'direction' flag
                 elif event.key == pygame.K_LEFT:
                     self.deck.moving_left = False
+            
+            
+                
+       
                     
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE] and self.state == STATE_BALL_IN_DECK:
-            self.ball_vel = self.ball_vel
-            self.state = STATE_PLAYING       
-            self.show_message("PRESS SPACE TO LAUNCH THE BALL")    
+        if len(self.bricks)==0:
+            self.state= STATE_NEXT_LEVEL
+             
+               
             
-        if self.state == STATE_PLAYING:
-            self.move_ball()       
-            self.handle_collisions()
-        elif self.state == STATE_BALL_IN_DECK:
-            self.ball.left = self.deck.rect.left + self.deck.rect.width / 2
-            #self.ball.top  = self.deck.rect.top - self.deck.rect.height
-            
+        
                 
             
                         
@@ -141,11 +170,34 @@ class Game:
         elif self.ball.top >= MAX_BALL_Y:            
             self.ball.top = MAX_BALL_Y
             self.ball_vel[1] = -self.ball_vel[1]
+            
     def handle_collisions(self):
         for brick in self.bricks:
             if self.ball.colliderect(brick):
+                if self.level==1:
+                    self.score+=3
+                self.ball_vel[1] = -self.ball_vel[1]
                 self.bricks.remove(brick)
                 break
+                
+        if self.ball.colliderect(self.deck):
+            self.ball.top=SCREEN_SIZE[1]-DECK_HEIGHT-BALL_DIAMETER
+            self.ball_vel[1]= -self.ball_vel[1]
+            
+        elif self.ball.top > self.deck.rect.top:
+            self.lives -= 1
+            if self.lives > 0:
+                self.state = STATE_BALL_IN_DECK
+            #The Code below shows when the user could win the game.
+            elif self.lives == 0 and self.score >= 1500:
+                self.state = STATE_WON
+            elif self.lives == 0 and self.score < 1500:
+                self.state = STATE_GAME_OVER    
+    def show_stats(self):
+        if self.font:
+            font_surface = self.font.render("SCORE: " + str(self.score) + " LIVES: " + str(self.lives) + " LEVEL: " + str(self.level), False, white)
+            self.screen.blit(font_surface, (205,5))   
+            
     def show_message(self,message):
         if self.font:
             size = self.font.size(message)
@@ -160,6 +212,7 @@ class Game:
         self.deck.blitme()
         self.draw_bricks()   
         self.draw_ball()
+        self.show_stats()
         # Make the most recently drawn screen visible.
         pygame.display.flip()
     
