@@ -17,6 +17,7 @@ MAX_BALL_Y   = SCREEN_SIZE[1] - BALL_DIAMETER
 
 white=(255,255,255)
 
+#State constants
 STATE_BALL_IN_DECK = 0
 STATE_PLAYING = 1
 STATE_WON = 2
@@ -208,10 +209,13 @@ class Game:
     def update_game(self):
         # Redraw the screen
         self.screen.fill(self.bg_color)
-        # Draw the deck
+        
         self.deck.blitme()
+        
         self.draw_bricks()   
+        
         self.draw_ball()
+        
         self.show_stats()
         # Make the most recently drawn screen visible.
         pygame.display.flip()
