@@ -23,7 +23,7 @@ class Deck:
     def update(self):
         """ Update the deck's position based on direction."""
         if self.moving_right and (self.rect.right<800):
-            self.rect.x +=1
+            self.rect.x +=18
         if self.moving_left and (self.rect.x>0):
-            self.rect.x -=1
+            self.rect.x -=18
         
