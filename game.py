@@ -64,8 +64,7 @@ class Game:
         
         self.create_brick()
   
-    def create_brick(self):
-       
+    def create_brick(self):      
         y_ofs = 70
         self.bricks = []
         for i in range(5):
@@ -75,18 +74,18 @@ class Game:
                 x_ofs += BRICK_WIDTH +1
             y_ofs += BRICK_HEIGHT +1
                
-    def draw_bricks(self):        
-        img= pygame.image.load("images/red.bmp") 
+    def draw_bricks(self):       
         #ListImg=[pygame.image.load("images/yellow.bmp"), pygame.image.load("images/red.bmp"), 
             #pygame.image.load("images/darkred.bmp"), pygame.image.load("images/green.bmp"),
             #pygame.image.load("images/darkgreen.bmp"), pygame.image.load("images/purple.bmp")]
-            
-        for brick in self.bricks:         
+        img= pygame.image.load("images/red.bmp")       
+        for brick in self.bricks:   
             #img=random.choice(ListImg)
             self.screen.blit(img,brick)
     def draw_ball(self):             
-        pygame.draw.circle(self.screen, white, (int(self.ball.left + BALL_RADIUS),int(self.ball.top + BALL_RADIUS)),int(BALL_RADIUS))
-        
+        pygame.draw.circle(self.screen, white, (int(self.ball.left + BALL_RADIUS)
+                            ,int(self.ball.top + BALL_RADIUS)),int(BALL_RADIUS))
+   
     def run_game(self):
         """ Main loop for the game."""
         while True:

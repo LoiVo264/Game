@@ -9,6 +9,7 @@ class Deck:
         # load the deck image and get it rect
         self.image = pygame.image.load('images/deck.bmp')
         self.rect = self.image.get_rect()
+        
         # Set its location at middle bottom of the screen
         self.rect.midbottom = self.screen_rect.midbottom
 
